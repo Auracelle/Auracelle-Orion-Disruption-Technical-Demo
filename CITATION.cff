@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it."
+title: "Auracelle Orion — Cyber Disruption & Escalation Sandbox (HTML Prototype)"
+authors:
+  - family-names: "Evans"
+    given-names: "Grace-Alice"
+date-released: "2026-03-02"
+type: software
+license: MIT
+repository-code: "https://github.com/<your-org-or-user>/auracelle-orion-cyber-disruption-escalation"
+abstract: >
+  Auracelle Orion is a cyber disruption and escalation sandbox presented as an interactive HTML prototype,
+  designed to support governance wargaming, escalation analysis, incident response lane workflows, and
+  structured after-action reflection under the E-AGPO-HT framing.
