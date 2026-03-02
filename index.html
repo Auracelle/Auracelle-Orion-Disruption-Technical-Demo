@@ -1,0 +1,1963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auracelle Orion — Cyber Disruption & Escalation Sandbox</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&family=Exo+2:wght@200;300;400;600&display=swap');
+
+  :root {
+    --bg-deep: #020c14;
+    --bg-panel: #050f1a;
+    --bg-card: #071420;
+    --border: rgba(0,200,255,0.15);
+    --border-hot: rgba(255,80,60,0.5);
+    --accent-cyan: #00c8ff;
+    --accent-teal: #00ffd4;
+    --accent-red: #ff4a38;
+    --accent-amber: #ffb830;
+    --accent-purple: #b06aff;
+    --text-primary: #d4eaf7;
+    --text-dim: #5a8aaa;
+    --text-mono: #00ffd4;
+    --glow-cyan: 0 0 12px rgba(0,200,255,0.4);
+    --glow-red: 0 0 14px rgba(255,74,56,0.5);
+    --glow-green: 0 0 12px rgba(0,255,180,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,200,255,0.015) 2px,
+      rgba(0,200,255,0.015) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(5,15,26,0.95);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .orion-sigil {
+    width: 42px;
+    height: 42px;
+    position: relative;
+  }
+
+  .orion-sigil svg { width: 100%; height: 100%; }
+
+  .brand-text h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: 0.12em;
+    color: var(--accent-cyan);
+    text-shadow: var(--glow-cyan);
+  }
+
+  .brand-text .sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .header-status {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .status-pill {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    padding: 4px 10px;
+    border-radius: 2px;
+    letter-spacing: 0.1em;
+  }
+
+  .status-pill.live {
+    background: rgba(255,74,56,0.12);
+    border: 1px solid var(--accent-red);
+    color: var(--accent-red);
+    animation: blink 1.4s ease-in-out infinite;
+  }
+
+  .status-pill.e2 {
+    background: rgba(255,184,48,0.1);
+    border: 1px solid var(--accent-amber);
+    color: var(--accent-amber);
+  }
+
+  .threat-level-display {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+  }
+
+  .threat-level-display span {
+    color: var(--accent-red);
+    font-size: 0.8rem;
+    text-shadow: var(--glow-red);
+  }
+
+  @keyframes blink {
+    0%,100%{opacity:1} 50%{opacity:0.3}
+  }
+
+  /* Layout */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 260px 1fr 300px;
+    grid-template-rows: auto 1fr;
+    height: calc(100vh - 70px);
+    gap: 0;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    background: var(--bg-panel);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .sidebar-section {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--accent-cyan);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* Scenario Cards */
+  .scenario-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .scenario-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--border-color, var(--accent-cyan));
+    opacity: 0.6;
+  }
+
+  .scenario-card:hover, .scenario-card.active {
+    border-color: var(--border-color, var(--accent-cyan));
+    background: rgba(0,200,255,0.04);
+    box-shadow: var(--glow-cyan);
+  }
+
+  .scenario-card.active { opacity: 1; }
+
+  .sc-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    color: var(--text-primary);
+    margin-bottom: 3px;
+  }
+
+  .sc-meta {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--text-dim);
+  }
+
+  .sc-badge {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.52rem;
+    padding: 2px 5px;
+    border-radius: 2px;
+    margin-top: 5px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Threat Level Selector */
+  .threat-selector {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+  }
+
+  .tl-btn {
+    flex: 1;
+    padding: 5px 4px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+
+  .tl-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+  .tl-btn.active { border-color: var(--acc); background: rgba(255,255,255,0.04); color: var(--acc); text-shadow: 0 0 8px var(--acc); }
+
+  /* Main Canvas */
+  .main-canvas {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg-deep);
+  }
+
+  .canvas-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-panel);
+    padding: 0 20px;
+    gap: 0;
+    flex-shrink: 0;
+  }
+
+  .ctab {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    padding: 12px 18px;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .ctab:hover { color: var(--text-primary); }
+  .ctab.active { color: var(--accent-cyan); border-bottom-color: var(--accent-cyan); }
+
+  .canvas-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  /* Tab Panels */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Propagation Map */
+  .propagation-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .prop-node {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 12px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+  }
+
+  .prop-node.compromised {
+    border-color: var(--accent-red);
+    background: rgba(255,74,56,0.08);
+    box-shadow: var(--glow-red);
+    animation: pulse-red 2s ease-in-out infinite;
+  }
+
+  .prop-node.degraded {
+    border-color: var(--accent-amber);
+    background: rgba(255,184,48,0.06);
+  }
+
+  .prop-node.secure {
+    border-color: rgba(0,255,180,0.3);
+    background: rgba(0,255,180,0.03);
+  }
+
+  .prop-node.unknown {
+    border-color: var(--border);
+    opacity: 0.5;
+  }
+
+  @keyframes pulse-red {
+    0%,100%{ box-shadow: 0 0 8px rgba(255,74,56,0.4); }
+    50%{ box-shadow: 0 0 20px rgba(255,74,56,0.7); }
+  }
+
+  .prop-node-icon { font-size: 1.4rem; margin-bottom: 5px; }
+  .prop-node-name {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  .prop-node-status {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.55rem;
+    margin-top: 4px;
+    font-weight: 600;
+  }
+
+  .compromised .prop-node-status { color: var(--accent-red); }
+  .degraded .prop-node-status { color: var(--accent-amber); }
+  .secure .prop-node-status { color: var(--accent-teal); }
+
+  /* Escalation Timeline */
+  .timeline {
+    position: relative;
+    padding-left: 30px;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px; top: 0; bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--accent-red), var(--accent-amber), var(--border));
+  }
+
+  .tl-event {
+    position: relative;
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    transition: all 0.2s;
+  }
+
+  .tl-event::before {
+    content: '';
+    position: absolute;
+    left: -26px;
+    top: 14px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--dot-color, var(--accent-cyan));
+    box-shadow: 0 0 8px var(--dot-color, var(--accent-cyan));
+  }
+
+  .tl-event:hover {
+    border-color: rgba(0,200,255,0.3);
+    background: rgba(0,200,255,0.03);
+  }
+
+  .tl-time {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  .tl-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    color: var(--text-primary);
+  }
+
+  .tl-desc {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  .tl-marl {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--accent-purple);
+    margin-top: 5px;
+  }
+
+  /* Lanes */
+  .lanes-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .lane {
+    border: 1px solid var(--lane-color, var(--border));
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .lane-header {
+    background: rgba(0,0,0,0.3);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--lane-color, var(--border));
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .lane-icon { font-size: 0.9rem; }
+  .lane-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    color: var(--lane-color, var(--text-primary));
+    text-transform: uppercase;
+  }
+
+  .lane-body { padding: 10px 12px; }
+
+  .playbook-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+
+  .ps-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--lane-color, var(--accent-cyan));
+    min-width: 18px;
+    margin-top: 1px;
+  }
+
+  .ps-check {
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--lane-color, var(--border));
+    border-radius: 2px;
+    min-width: 14px;
+    margin-top: 1px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+  }
+
+  .ps-check.checked {
+    background: var(--lane-color, var(--accent-cyan));
+    color: #000;
+  }
+
+  .ps-text {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+
+  /* MARL Intelligence Panel */
+  .marl-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .marl-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 14px;
+  }
+
+  .marl-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    color: var(--accent-purple);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .marl-metric {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .marl-metric-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--text-dim);
+  }
+
+  .marl-metric-val {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent-cyan);
+  }
+
+  .marl-bar-outer {
+    background: rgba(0,0,0,0.5);
+    border-radius: 2px;
+    height: 5px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+
+  .marl-bar-inner {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--bar-start, var(--accent-cyan)), var(--bar-end, var(--accent-teal)));
+    transition: width 0.8s ease;
+  }
+
+  /* E-AGPO Math Panel */
+  .math-block {
+    background: var(--bg-card);
+    border: 1px solid rgba(176,106,255,0.2);
+    border-radius: 3px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.68rem;
+    line-height: 1.8;
+    color: var(--accent-purple);
+  }
+
+  .math-block .math-label {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .math-eq { color: var(--accent-teal); }
+  .math-var { color: var(--accent-cyan); }
+  .math-const { color: var(--accent-amber); }
+
+  /* NC3 Lane */
+  .nc3-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .nc3-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .nc3-card:hover { border-color: rgba(255,74,56,0.4); }
+
+  .nc3-card.triggered {
+    border-color: var(--accent-red);
+    background: rgba(255,74,56,0.06);
+    box-shadow: var(--glow-red);
+  }
+
+  .nc3-card.warning {
+    border-color: var(--accent-amber);
+    background: rgba(255,184,48,0.04);
+  }
+
+  .nc3-icon { font-size: 1.4rem; margin-bottom: 6px; }
+  .nc3-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+
+  .nc3-desc {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+
+  .nc3-indicator {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    margin-top: 8px;
+    padding: 3px 6px;
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  /* Right Panel */
+  .right-panel {
+    border-left: 1px solid var(--border);
+    background: var(--bg-panel);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .rp-section {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .rp-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--accent-cyan);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* Metrics */
+  .metric-block {
+    margin-bottom: 10px;
+  }
+
+  .metric-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .metric-name {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--text-dim);
+  }
+
+  .metric-value {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+  }
+
+  .progress-bar {
+    height: 4px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+
+  /* BGC Stratum Panel */
+  .bgc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .bgc-badge {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 6px 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .bgc-badge:hover { border-color: var(--accent-cyan); }
+  .bgc-badge.active { border-color: var(--accent-teal); background: rgba(0,255,180,0.04); }
+
+  .bgc-code {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent-teal);
+    font-weight: 600;
+  }
+
+  .bgc-name {
+    font-family: 'Exo 2', sans-serif;
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  /* Log */
+  .log-feed {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .log-entry {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(0,200,255,0.05);
+    display: flex;
+    gap: 8px;
+    line-height: 1.4;
+  }
+
+  .log-time { color: var(--text-dim); min-width: 52px; }
+  .log-tag { min-width: 38px; }
+  .log-msg { color: var(--text-dim); }
+
+  .log-tag.CRIT { color: var(--accent-red); }
+  .log-tag.WARN { color: var(--accent-amber); }
+  .log-tag.INFO { color: var(--accent-cyan); }
+  .log-tag.MARL { color: var(--accent-purple); }
+  .log-tag.OK { color: var(--accent-teal); }
+
+  /* Controls */
+  .sim-controls {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-panel);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .sim-btn {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    padding: 8px 16px;
+    border: 1px solid;
+    border-radius: 2px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    background: transparent;
+  }
+
+  .sim-btn.primary {
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+  }
+  .sim-btn.primary:hover {
+    background: rgba(0,200,255,0.1);
+    box-shadow: var(--glow-cyan);
+  }
+  .sim-btn.danger {
+    border-color: var(--accent-red);
+    color: var(--accent-red);
+  }
+  .sim-btn.danger:hover {
+    background: rgba(255,74,56,0.08);
+    box-shadow: var(--glow-red);
+  }
+  .sim-btn.amber {
+    border-color: var(--accent-amber);
+    color: var(--accent-amber);
+  }
+  .sim-btn.amber:hover { background: rgba(255,184,48,0.08); }
+
+  .sim-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .tick-display {
+    margin-left: auto;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--text-dim);
+  }
+
+  .tick-display span { color: var(--accent-cyan); }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--bg-panel);
+    border: 1px solid var(--accent-cyan);
+    border-radius: 4px;
+    padding: 24px;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: 0 0 40px rgba(0,200,255,0.2);
+  }
+
+  .modal-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 0.1em;
+    color: var(--accent-cyan);
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+
+  .modal-body {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .modal-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .modal-metric {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 8px 10px;
+  }
+
+  .mm-label { font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; color: var(--text-dim); }
+  .mm-val { font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: var(--accent-teal); margin-top: 2px; }
+
+  .modal-close {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    padding: 7px 16px;
+    border: 1px solid var(--accent-cyan);
+    border-radius: 2px;
+    color: var(--accent-cyan);
+    background: transparent;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+
+  .modal-close:hover { background: rgba(0,200,255,0.1); }
+
+  /* Section heading */
+  .section-heading {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+    color: var(--accent-cyan);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-heading .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-cyan);
+    box-shadow: var(--glow-cyan);
+  }
+
+  /* Wargame score */
+  .wg-score-block {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .wg-score-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .wg-score-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  .wg-score-val {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 2rem;
+    letter-spacing: 0.05em;
+  }
+
+  .wg-score-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Node Analysis</div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-metrics" id="modal-metrics"></div>
+    <button class="modal-close" onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-brand">
+    <div class="orion-sigil">
+      <svg viewBox="0 0 42 42" fill="none">
+        <circle cx="21" cy="21" r="20" stroke="rgba(0,200,255,0.3)" stroke-width="1"/>
+        <circle cx="21" cy="21" r="14" stroke="rgba(0,200,255,0.2)" stroke-width="0.5"/>
+        <!-- Orion belt stars -->
+        <circle cx="14" cy="21" r="2.5" fill="#00c8ff" opacity="0.9"/>
+        <circle cx="21" cy="21" r="2.5" fill="#00ffd4" opacity="0.9"/>
+        <circle cx="28" cy="21" r="2.5" fill="#00c8ff" opacity="0.9"/>
+        <!-- Lines -->
+        <line x1="16.5" y1="21" x2="18.5" y2="21" stroke="rgba(0,200,255,0.5)" stroke-width="0.8"/>
+        <line x1="23.5" y1="21" x2="25.5" y2="21" stroke="rgba(0,200,255,0.5)" stroke-width="0.8"/>
+        <!-- Cross hairs -->
+        <line x1="21" y1="4" x2="21" y2="10" stroke="rgba(0,200,255,0.25)" stroke-width="0.5"/>
+        <line x1="21" y1="32" x2="21" y2="38" stroke="rgba(0,200,255,0.25)" stroke-width="0.5"/>
+        <line x1="4" y1="21" x2="10" y2="21" stroke="rgba(0,200,255,0.25)" stroke-width="0.5"/>
+        <line x1="32" y1="21" x2="38" y2="21" stroke="rgba(0,200,255,0.25)" stroke-width="0.5"/>
+      </svg>
+    </div>
+    <div class="brand-text">
+      <h1>AURACELLE · ORION</h1>
+      <div class="sub">Cyber Disruption &amp; Escalation Sandbox · E-AGPO-HT v3.2</div>
+    </div>
+  </div>
+  <div class="header-status">
+    <div class="status-pill live">● SIM ACTIVE</div>
+    <div class="status-pill e2">ESCALATION-2</div>
+    <div class="threat-level-display">THREAT: <span id="header-threat">SEVERE</span></div>
+  </div>
+</div>
+
+<!-- Main Grid -->
+<div class="main-grid">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">// Scenario Library</div>
+
+      <div class="scenario-card active" style="--border-color:#ff4a38" onclick="loadScenario(0)">
+        <div class="sc-title">MIRAGE CHAIN</div>
+        <div class="sc-meta">AI-NC3 Supply Chain + Grid Cascade</div>
+        <div class="sc-badge" style="background:rgba(255,74,56,0.1);border:1px solid #ff4a38;color:#ff4a38">CRITICAL</div>
+      </div>
+
+      <div class="scenario-card" style="--border-color:#ffb830" onclick="loadScenario(1)">
+        <div class="sc-title">SILENT ECHO</div>
+        <div class="sc-meta">Pre-activation Compromise, NC3 Signaling</div>
+        <div class="sc-badge" style="background:rgba(255,184,48,0.1);border:1px solid #ffb830;color:#ffb830">HIGH</div>
+      </div>
+
+      <div class="scenario-card" style="--border-color:#b06aff" onclick="loadScenario(2)">
+        <div class="sc-title">FRACTURE POINT</div>
+        <div class="sc-meta">Cross-border Coord. Breakdown / CSIRT Failure</div>
+        <div class="sc-badge" style="background:rgba(176,106,255,0.1);border:1px solid #b06aff;color:#b06aff">HIGH</div>
+      </div>
+
+      <div class="scenario-card" style="--border-color:#00ffd4" onclick="loadScenario(3)">
+        <div class="sc-title">PROLIFERA-X</div>
+        <div class="sc-meta">Dual-use AI Proliferation / NSAG Pathways</div>
+        <div class="sc-badge" style="background:rgba(0,255,180,0.08);border:1px solid #00ffd4;color:#00ffd4">MEDIUM</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">// Threat Level Override</div>
+      <div class="threat-selector">
+        <button class="tl-btn" style="--acc:#00ffd4" onclick="setThreat('LOW',this)">LOW</button>
+        <button class="tl-btn" style="--acc:#ffb830" onclick="setThreat('ELEV',this)">ELEV</button>
+        <button class="tl-btn active" style="--acc:#ff4a38" onclick="setThreat('SEV',this)">SEV</button>
+        <button class="tl-btn" style="--acc:#ff0000" onclick="setThreat('CRIT',this)">CRIT</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">// E-AGPO Stratum II · BGC</div>
+      <div class="bgc-grid">
+        <div class="bgc-badge active" onclick="toggleBGC(this)">
+          <div class="bgc-code">STI</div>
+          <div class="bgc-name">Structural Integrity</div>
+        </div>
+        <div class="bgc-badge active" onclick="toggleBGC(this)">
+          <div class="bgc-code">SAD</div>
+          <div class="bgc-name">Systemic Adversarial Dynamics</div>
+        </div>
+        <div class="bgc-badge" onclick="toggleBGC(this)">
+          <div class="bgc-code">ESI</div>
+          <div class="bgc-name">Escalation Signaling Index</div>
+        </div>
+        <div class="bgc-badge active" onclick="toggleBGC(this)">
+          <div class="bgc-code">NDM</div>
+          <div class="bgc-name">Normative Decision Matrix</div>
+        </div>
+        <div class="bgc-badge" onclick="toggleBGC(this)">
+          <div class="bgc-code">SRA</div>
+          <div class="bgc-name">Stakeholder Risk Alignment</div>
+        </div>
+        <div class="bgc-badge active" onclick="toggleBGC(this)">
+          <div class="bgc-code">IIC</div>
+          <div class="bgc-name">Inter-institutional Coherence</div>
+        </div>
+        <div class="bgc-badge" onclick="toggleBGC(this)">
+          <div class="bgc-code">ASI</div>
+          <div class="bgc-name">Adaptive Strategy Index</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">// Wargaming Score</div>
+      <div class="wg-score-block">
+        <div class="wg-score-card">
+          <div class="wg-score-label">DEFENDER</div>
+          <div class="wg-score-val" style="color:#00ffd4" id="def-score">47</div>
+          <div class="wg-score-sub">governance pts</div>
+        </div>
+        <div class="wg-score-card">
+          <div class="wg-score-label">ADVERSARY</div>
+          <div class="wg-score-val" style="color:#ff4a38" id="adv-score">62</div>
+          <div class="wg-score-sub">disruption pts</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Main Canvas -->
+  <div class="main-canvas">
+
+    <div class="canvas-tabs">
+      <div class="ctab active" onclick="switchTab('propagation',this)">Disruption Map</div>
+      <div class="ctab" onclick="switchTab('timeline',this)">Escalation Timeline</div>
+      <div class="ctab" onclick="switchTab('lanes',this)">IR Workflow Lanes</div>
+      <div class="ctab" onclick="switchTab('marl',this)">MARL Intelligence</div>
+      <div class="ctab" onclick="switchTab('nc3',this)">AI-NC3 Stress</div>
+      <div class="ctab" onclick="switchTab('prolifera',this)">Dual-Use / Proliferation</div>
+    </div>
+
+    <div class="canvas-body">
+
+      <!-- DISRUPTION MAP -->
+      <div id="tab-propagation" class="tab-panel active">
+        <div class="section-heading"><div class="dot"></div>Adversarial Disruption Propagation — MIRAGE CHAIN</div>
+        <p style="font-size:0.72rem;color:var(--text-dim);margin-bottom:16px;line-height:1.5">
+          Visualizing how the MIRAGE CHAIN attack propagates across technical and organizational nodes. Click any node to inspect E-AGPO cascade metrics. Red = compromised, amber = degraded, teal = secure. MARL agents recomputing defender strategies every tick.
+        </p>
+
+        <div class="section-heading" style="font-size:0.72rem;color:var(--text-dim);margin-bottom:10px;border:none;padding:0">
+          Layer 1 · Technical Infrastructure
+        </div>
+        <div class="propagation-grid" id="prop-grid-1">
+          <div class="prop-node compromised" onclick="nodeDetail('Supply Chain API','COMPROMISED — Initial vector. Malicious model weights injected via third-party ML pipeline. Integrity checks bypassed by adversarial gradient masking.','Critical','T+00:00','0.91','Exfiltration active')">
+            <div class="prop-node-icon">🔗</div>
+            <div class="prop-node-name">SUPPLY CHAIN</div>
+            <div class="prop-node-status">COMPROMISED</div>
+          </div>
+          <div class="prop-node compromised" onclick="nodeDetail('ML Model Registry','COMPROMISED — Poisoned weights propagated to production models. 3 downstream inference systems affected. Silent pre-activation signatures detected.','Critical','T+01:20','0.87','Lateral propagation')">
+            <div class="prop-node-icon">🧠</div>
+            <div class="prop-node-name">ML REGISTRY</div>
+            <div class="prop-node-status">COMPROMISED</div>
+          </div>
+          <div class="prop-node degraded" onclick="nodeDetail('SCADA / ICS Gateway','DEGRADED — Anomalous control signals originated from poisoned inference layer. Human operator loop partially bypassed. Physical actuation risk: MODERATE.','High','T+02:45','0.54','Escalation pathway open')">
+            <div class="prop-node-icon">⚙️</div>
+            <div class="prop-node-name">SCADA/ICS</div>
+            <div class="prop-node-status">DEGRADED</div>
+          </div>
+          <div class="prop-node degraded" onclick="nodeDetail('Comms & C2 Layer','DEGRADED — Encrypted C2 channels experiencing timing anomalies consistent with data integrity attack. Key exchange protocols may be compromised.','High','T+03:10','0.48','Under investigation')">
+            <div class="prop-node-icon">📡</div>
+            <div class="prop-node-name">C2 COMMS</div>
+            <div class="prop-node-status">DEGRADED</div>
+          </div>
+          <div class="prop-node secure" onclick="nodeDetail('Air-Gapped Backup','SECURE — Isolated from primary network. Manual key verification intact. Contingency protocols loaded. Last verified T+03:00.','Low','T+03:00','0.05','Nominal')">
+            <div class="prop-node-icon">🔒</div>
+            <div class="prop-node-name">AIR-GAP BKP</div>
+            <div class="prop-node-status">SECURE</div>
+          </div>
+        </div>
+
+        <div class="section-heading" style="font-size:0.72rem;color:var(--text-dim);margin-bottom:10px;border:none;padding:0;margin-top:14px">
+          Layer 2 · Organizational Systems
+        </div>
+        <div class="propagation-grid" id="prop-grid-2">
+          <div class="prop-node compromised" onclick="nodeDetail('Incident Command','COMPROMISED — Shared situational awareness board injected with false telemetry. Decision cycle poisoned. IR team operating on corrupted data.','Critical','T+02:00','0.82','False data injection')">
+            <div class="prop-node-icon">🎯</div>
+            <div class="prop-node-name">INCIDENT CMD</div>
+            <div class="prop-node-status">COMPROMISED</div>
+          </div>
+          <div class="prop-node degraded" onclick="nodeDetail('Legal Counsel / Policy','DEGRADED — Conflicting legal interpretations of incident attribution delaying response authorization. Cross-border jurisdiction dispute unresolved.','Medium','T+03:30','0.38','Decision paralysis')">
+            <div class="prop-node-icon">⚖️</div>
+            <div class="prop-node-name">LEGAL/POLICY</div>
+            <div class="prop-node-status">DEGRADED</div>
+          </div>
+          <div class="prop-node degraded" onclick="nodeDetail('Public Affairs / COMMS','DEGRADED — Coordinated disinfo campaign running in parallel with technical attack. Press office receiving conflicting guidance. Attribution confusion amplified.','Medium','T+04:00','0.42','Info op active')">
+            <div class="prop-node-icon">📢</div>
+            <div class="prop-node-name">PUBLIC COMMS</div>
+            <div class="prop-node-status">DEGRADED</div>
+          </div>
+          <div class="prop-node unknown" onclick="nodeDetail('Allied CSIRT Partners','UNKNOWN — Cross-border coordination channel unresponsive. Possible: notification not sent, partner systems overwhelmed, or intentional isolation by adversary.','Unknown','T+03:00','—','No contact')">
+            <div class="prop-node-icon">🌐</div>
+            <div class="prop-node-name">ALLIED CSIRT</div>
+            <div class="prop-node-status" style="color:var(--text-dim)">UNKNOWN</div>
+          </div>
+          <div class="prop-node secure" onclick="nodeDetail('Executive Authority Hub','SECURE — Physical command facility isolated. Human authority guardrail confirmed active. Launch/action authority delegation protocols intact per NC3 guidelines.','Low','T+03:00','0.08','Guardrail active')">
+            <div class="prop-node-icon">🏛️</div>
+            <div class="prop-node-name">EXEC AUTHORITY</div>
+            <div class="prop-node-status">SECURE</div>
+          </div>
+        </div>
+
+        <div class="marl-grid" style="margin-top:20px">
+          <div class="marl-card">
+            <div class="marl-title">⬡ MARL Cascade Probability</div>
+            <div class="marl-metric">
+              <div class="marl-metric-label">ICS → Physical Actuation</div>
+              <div class="marl-metric-val" style="color:var(--accent-red)">73%</div>
+            </div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:73%;--bar-start:#ff4a38;--bar-end:#ff8050"></div></div>
+            <div class="marl-metric" style="margin-top:10px">
+              <div class="marl-metric-label">Org. Decision Paralysis</div>
+              <div class="marl-metric-val" style="color:var(--accent-amber)">61%</div>
+            </div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:61%;--bar-start:#ffb830;--bar-end:#ffda80"></div></div>
+            <div class="marl-metric" style="margin-top:10px">
+              <div class="marl-metric-label">Cross-border Coord. Failure</div>
+              <div class="marl-metric-val" style="color:var(--accent-amber)">54%</div>
+            </div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:54%;--bar-start:#ffb830;--bar-end:#ff8030"></div></div>
+          </div>
+          <div class="marl-card">
+            <div class="marl-title">⬡ Defender Strategy Pool</div>
+            <div class="marl-metric">
+              <div class="marl-metric-label">Isolate &amp; Contain (Q=0.82)</div>
+              <div class="marl-metric-val" style="color:var(--accent-teal)">SELECTED</div>
+            </div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:82%;"></div></div>
+            <div class="marl-metric" style="margin-top:10px">
+              <div class="marl-metric-label">Manual Fallback (Q=0.67)</div>
+              <div class="marl-metric-val">ALT-1</div>
+            </div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:67%;--bar-start:#5a8aaa;--bar-end:#7ab0cc"></div></div>
+            <div class="marl-metric" style="margin-top:10px">
+              <div class="marl-metric-label">Deception/Honeypot (Q=0.44)</div>
+              <div class="marl-metric-val" style="color:var(--text-dim)">LOW-CONF</div>
+            </div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:44%;--bar-start:#3a5a70;--bar-end:#5a8aaa"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ESCALATION TIMELINE -->
+      <div id="tab-timeline" class="tab-panel">
+        <div class="section-heading"><div class="dot"></div>Escalation Timeline — MIRAGE CHAIN · T+00:00 to T+06:00</div>
+        <div class="timeline">
+
+          <div class="tl-event" style="--dot-color:#ff4a38">
+            <div class="tl-time">T+00:00 · TICK 001</div>
+            <div class="tl-title">Initial Vector: Supply Chain Injection</div>
+            <div class="tl-desc">Adversary delivers poisoned ML model weights via compromised third-party vendor repository. Integrity validation bypassed using adversarial gradient masking. No alerts triggered at ingestion layer.</div>
+            <div class="tl-marl">MARL · Adversary Policy π_A: Stealth injection → minimize detection probability | Q=0.94</div>
+          </div>
+
+          <div class="tl-event" style="--dot-color:#ff4a38">
+            <div class="tl-time">T+01:20 · TICK 008</div>
+            <div class="tl-title">ML Registry Compromise Confirmed</div>
+            <div class="tl-desc">Poisoned weights propagated to production model registry. Three downstream inference pipelines now operating on compromised models. Silent pre-activation signatures embedded — await trigger condition.</div>
+            <div class="tl-marl">MARL · ESI metric crosses threshold 0.65 → Escalation ladder step 2 activated | BGC-SAD: 0.78</div>
+          </div>
+
+          <div class="tl-event" style="--dot-color:#ffb830">
+            <div class="tl-time">T+02:00 · TICK 012</div>
+            <div class="tl-title">Incident Command Telemetry Poisoned</div>
+            <div class="tl-desc">False sensor data injected into shared situational awareness platform. IR team now operating on corrupted picture. First responders dispatched to non-priority nodes. Decision cycle exploitation window opens.</div>
+            <div class="tl-marl">MARL · Defender Policy π_D confidence degraded: uncertainty +0.31 | NDM divergence detected</div>
+          </div>
+
+          <div class="tl-event" style="--dot-color:#ffb830">
+            <div class="tl-time">T+02:45 · TICK 017</div>
+            <div class="tl-title">SCADA Anomaly — Physical Actuation Risk</div>
+            <div class="tl-desc">Anomalous control commands issued from compromised inference layer to ICS gateway. Operator alert generated but suppressed by adversarial noise injection. Physical actuation probability elevated to MODERATE.</div>
+            <div class="tl-marl">MARL · STI metric: 0.41 (below safe threshold 0.60) → Structural vulnerability active</div>
+          </div>
+
+          <div class="tl-event" style="--dot-color:#b06aff">
+            <div class="tl-time">T+03:10 · TICK 019</div>
+            <div class="tl-title">C2 Comms Timing Attack — Attribution Obscured</div>
+            <div class="tl-desc">Encrypted C2 channels experiencing systematic timing anomalies. Traffic analysis inconclusive on attribution. Legal/policy team unable to authorize response without confirmed attacker identity per standing doctrine.</div>
+            <div class="tl-marl">MARL · IIC metric: 0.29 (critical) — inter-agency coordination loop broken | ASI penalty applied</div>
+          </div>
+
+          <div class="tl-event" style="--dot-color:#ff4a38">
+            <div class="tl-time">T+04:00 · TICK 024</div>
+            <div class="tl-title">Cross-border CSIRT Contact Lost — Coord. Failure</div>
+            <div class="tl-desc">Allied CSIRT notification sent via primary channel — no acknowledgment. Secondary channel unresponsive. Adversary appears to have pre-positioned infrastructure to isolate affected nation's partners. Unilateral response only option.</div>
+            <div class="tl-marl">MARL · Multi-agent equilibrium collapses — single-agent suboptimal response forced | SRA divergence: 0.71</div>
+          </div>
+
+          <div class="tl-event" style="--dot-color:#ffb830">
+            <div class="tl-time">T+05:30 · TICK 033</div>
+            <div class="tl-title">Information Operation Amplifies Confusion</div>
+            <div class="tl-desc">Parallel disinfo campaign activated — coordinated social media posts attribute attack to third-party state actor, contradicting technical forensics. Public affairs unable to issue authoritative statement pending legal clearance. Crisis tempo advantage to adversary.</div>
+            <div class="tl-marl">MARL · Adversary composite score +18 pts | Governance outcome index falls to 0.38 (below stability floor)</div>
+          </div>
+
+          <div class="tl-event" style="--dot-color:#00ffd4">
+            <div class="tl-time">T+06:00 · TICK 036</div>
+            <div class="tl-title">⚡ Decision Point — Escalation Ladder Choice</div>
+            <div class="tl-desc">Executive authority hub activates manual authority protocol. Three options available: (A) Limited cyber counter-operation, (B) Defensive isolation with diplomatic notification, (C) Escalation to alliance Article 5 consultation. Timing pressure: 8 minutes to act before next cascade trigger.</div>
+            <div class="tl-marl">MARL · All three policy options under active computation | Recommend: Option B — highest expected governance utility 0.72</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- IR WORKFLOW LANES -->
+      <div id="tab-lanes" class="tab-panel">
+        <div class="section-heading"><div class="dot"></div>Incident Response Workflow Engine — Holistic Response Lanes</div>
+        <p style="font-size:0.72rem;color:var(--text-dim);margin-bottom:16px;line-height:1.5">Click each playbook step to mark complete. Track coordination across technical, legal, diplomatic, and public lanes simultaneously under adversarial pressure.</p>
+
+        <div class="lanes-grid">
+
+          <div class="lane" style="--lane-color:#00ffd4">
+            <div class="lane-header">
+              <div class="lane-icon">🔧</div>
+              <div class="lane-name">Technical</div>
+            </div>
+            <div class="lane-body">
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">01</div>
+                <div class="ps-check">✓</div>
+                <div class="ps-text">Isolate compromised supply chain endpoint and halt model registry sync</div>
+              </div>
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">02</div>
+                <div class="ps-check checked">✓</div>
+                <div class="ps-text">Deploy integrity verification on all production ML models; flag anomalous weights</div>
+              </div>
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">03</div>
+                <div class="ps-check">✓</div>
+                <div class="ps-text">Restore SCADA control loop to manual override; disable AI-assisted actuation</div>
+              </div>
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">04</div>
+                <div class="ps-check">✓</div>
+                <div class="ps-text">Purge and revalidate C2 comms keys via out-of-band secure channel</div>
+              </div>
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">05</div>
+                <div class="ps-check">✓</div>
+                <div class="ps-text">Activate air-gapped backup IR command infrastructure; switch primary ops</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="lane" style="--lane-color:#ffb830">
+            <div class="lane-header">
+              <div class="lane-icon">⚖️</div>
+              <div class="lane-name">Legal</div>
+            </div>
+            <div class="lane-body">
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">01</div>
+                <div class="ps-check checked">✓</div>
+                <div class="ps-text">Activate incident legal hold; preserve forensic chain of custody documentation</div>
+              </div>
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">02</div>
+                <div class="ps-check">✓</div>
+                <div class="ps-text">Review attribution threshold requirements for authorized cyber response</div>
+              </div>
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">03</div>
+                <div class="ps-check">✓</div>
+                <div class="ps-text">Assess cross-border jurisdiction constraints for allied CSIRT data sharing</div>
+              </div>
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">04</div>
+                <div class="ps-check">✓</div>
+                <div class="ps-text">Prepare legal basis memo for any active defensive countermeasures</div>
+              </div>
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">05</div>
+                <div class="ps-check">✓</div>
+                <div class="ps-text">Brief executive authority on legal risk spectrum of three escalation options</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="lane" style="--lane-color:#b06aff">
+            <div class="lane-header">
+              <div class="lane-icon">🌐</div>
+              <div class="lane-name">Diplomatic</div>
+            </div>
+            <div class="lane-body">
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">01</div>
+                <div class="ps-check">✓</div>
+                <div class="ps-text">Transmit priority-1 CSIRT notification via secondary backup channel</div>
+              </div>
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">02</div>
+                <div class="ps-check">✓</div>
+                <div class="ps-text">Activate MLAT / information-sharing treaty provision with affected partners</div>
+              </div>
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">03</div>
+                <div class="ps-check">✓</div>
+                <div class="ps-text">Draft demarche to suspected state sponsor with 24-hr response demand</div>
+              </div>
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">04</div>
+                <div class="ps-check">✓</div>
+                <div class="ps-text">Request emergency NATO / alliance consultation under Article 5 cyber annex</div>
+              </div>
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">05</div>
+                <div class="ps-check">✓</div>
+                <div class="ps-text">Submit joint incident notification to UN GGE reporting mechanism</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="lane" style="--lane-color:#00c8ff">
+            <div class="lane-header">
+              <div class="lane-icon">📢</div>
+              <div class="lane-name">Public</div>
+            </div>
+            <div class="lane-body">
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">01</div>
+                <div class="ps-check checked">✓</div>
+                <div class="ps-text">Activate crisis communications hold — no external statements without clearance</div>
+              </div>
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">02</div>
+                <div class="ps-check">✓</div>
+                <div class="ps-text">Monitor and flag disinfo narrative spread; do not amplify; brief social media team</div>
+              </div>
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">03</div>
+                <div class="ps-check">✓</div>
+                <div class="ps-text">Prepare attributable technical summary for coordinated public release (72hr)</div>
+              </div>
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">04</div>
+                <div class="ps-check">✓</div>
+                <div class="ps-text">Coordinate with allied PIO offices for unified joint statement</div>
+              </div>
+              <div class="playbook-step" onclick="toggleStep(this)">
+                <div class="ps-num">05</div>
+                <div class="ps-check">✓</div>
+                <div class="ps-text">Issue public advisory to sector operators re: supply chain integrity checks</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="marl-card" style="margin-top:8px">
+          <div class="marl-title">⬡ IIC Metric — Inter-Lane Coordination Score</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:8px">
+            <div>
+              <div class="marl-metric-label">Technical</div>
+              <div class="marl-bar-outer" style="margin-top:6px"><div class="marl-bar-inner" id="tech-bar" style="width:40%"></div></div>
+              <div class="marl-metric-label" style="margin-top:3px" id="tech-pct">40% complete</div>
+            </div>
+            <div>
+              <div class="marl-metric-label">Legal</div>
+              <div class="marl-bar-outer" style="margin-top:6px"><div class="marl-bar-inner" id="legal-bar" style="width:20%;--bar-start:#ffb830;--bar-end:#ffda80"></div></div>
+              <div class="marl-metric-label" style="margin-top:3px">20% complete</div>
+            </div>
+            <div>
+              <div class="marl-metric-label">Diplomatic</div>
+              <div class="marl-bar-outer" style="margin-top:6px"><div class="marl-bar-inner" style="width:0%;--bar-start:#b06aff;--bar-end:#d090ff"></div></div>
+              <div class="marl-metric-label" style="margin-top:3px">0% complete</div>
+            </div>
+            <div>
+              <div class="marl-metric-label">Public</div>
+              <div class="marl-bar-outer" style="margin-top:6px"><div class="marl-bar-inner" style="width:20%;--bar-start:#00c8ff;--bar-end:#80e8ff"></div></div>
+              <div class="marl-metric-label" style="margin-top:3px">20% complete</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MARL INTELLIGENCE -->
+      <div id="tab-marl" class="tab-panel">
+        <div class="section-heading"><div class="dot"></div>Multi-Agent Reinforcement Learning — E-AGPO Intelligence Layer</div>
+
+        <div class="math-block">
+          <div class="math-label">E-AGPO · Accelerated Governance Policy Optimization · Core Objective</div>
+          <div class="math-eq">J(π) = 𝔼<sub>τ~π</sub> [Σ<sub>t=0</sub><sup>T</sup> γ<sup>t</sup> · R(s<sub>t</sub>, a<sub>t</sub>, s<sub>t+1</sub>)] + λ·<span class="math-var">Ω</span>(π)</div>
+          <div style="margin-top:6px;font-size:0.62rem;color:var(--text-dim)">
+            R = governance utility · γ = 0.97 discount · λ = 0.15 regularization · Ω = policy constraint penalty
+          </div>
+        </div>
+
+        <div class="math-block">
+          <div class="math-label">Stratum II BGC · Adversarial Escalation Signal</div>
+          <div class="math-eq"><span class="math-var">ESI</span>(t) = α·<span class="math-const">STI</span><sup>-1</sup> + β·<span class="math-const">SAD</span> + γ·<span class="math-const">IIC</span><sup>-1</sup> + δ·ΔComms(t)</div>
+          <div style="margin-top:6px;font-size:0.62rem;color:var(--text-dim)">
+            Current: ESI(T+6) = 0.81 · [ESCALATION-2 threshold: 0.70] · α=0.3, β=0.25, γ=0.25, δ=0.2
+          </div>
+        </div>
+
+        <div class="marl-grid">
+          <div class="marl-card">
+            <div class="marl-title">⬡ Adversary Agent (π_A)</div>
+            <div class="marl-metric"><div class="marl-metric-label">Stealth Coefficient</div><div class="marl-metric-val" style="color:var(--accent-red)">0.88</div></div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:88%;--bar-start:#ff4a38;--bar-end:#ff8050"></div></div>
+            <div class="marl-metric" style="margin-top:10px"><div class="marl-metric-label">Persistence Index</div><div class="marl-metric-val" style="color:var(--accent-red)">0.74</div></div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:74%;--bar-start:#ff4a38;--bar-end:#ff6040"></div></div>
+            <div class="marl-metric" style="margin-top:10px"><div class="marl-metric-label">Attribution Obfuscation</div><div class="marl-metric-val" style="color:var(--accent-amber)">0.67</div></div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:67%;--bar-start:#ffb830;--bar-end:#ffda80"></div></div>
+            <div class="marl-metric" style="margin-top:10px"><div class="marl-metric-label">Disinfo Amplification</div><div class="marl-metric-val" style="color:var(--accent-amber)">0.59</div></div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:59%;--bar-start:#ffb830;--bar-end:#ff9830"></div></div>
+          </div>
+
+          <div class="marl-card">
+            <div class="marl-title">⬡ Defender Agent (π_D)</div>
+            <div class="marl-metric"><div class="marl-metric-label">Detection Precision</div><div class="marl-metric-val">0.43</div></div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:43%;--bar-start:#5a8aaa;--bar-end:#7ab0cc"></div></div>
+            <div class="marl-metric" style="margin-top:10px"><div class="marl-metric-label">Response Coordination</div><div class="marl-metric-val">0.38</div></div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:38%;--bar-start:#5a8aaa;--bar-end:#6a9abb"></div></div>
+            <div class="marl-metric" style="margin-top:10px"><div class="marl-metric-label">Policy Uncertainty</div><div class="marl-metric-val" style="color:var(--accent-red)">0.71</div></div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:71%;--bar-start:#ff4a38;--bar-end:#ff7050"></div></div>
+            <div class="marl-metric" style="margin-top:10px"><div class="marl-metric-label">Resilience Score</div><div class="marl-metric-val" style="color:var(--accent-teal)">0.52</div></div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:52%"></div></div>
+          </div>
+        </div>
+
+        <div class="math-block">
+          <div class="math-label">g-GWC · Stratum III · Generalized Governance Wargaming Coefficient</div>
+          <div class="math-eq"><span class="math-var">g-GWC</span> = Σ<sub>i=1</sub><sup>7</sup> w<sub>i</sub>·BGC<sub>i</sub> + Σ<sub>j=1</sub><sup>4</sup> ω<sub>j</sub>·ACC<sub>j</sub> · f(NOF<sub>~40</sub>)</div>
+          <div style="margin-top:6px;font-size:0.62rem;color:var(--text-dim)">
+            Current g-GWC: <span style="color:var(--accent-red)">0.34</span> (critical range ≤0.40) · Stability floor: 0.50 · ACC factors: Autonomy, Capability, Consequence, Coordination
+          </div>
+        </div>
+
+        <div class="marl-card">
+          <div class="marl-title">⬡ NOF Sample — Normative Operational Factors (Stratum I, n=40)</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px">
+            <span style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--text-dim)">detection_latency_s · attribution_confidence · response_authorization_delay · comms_integrity · key_exchange_validity · org_decision_tempo · legal_review_cycles · allied_coordination_lag · public_trust_index · info_dominance_ratio · escalation_threshold_proximity · human_in_loop_status · ai_decision_autonomy · protocol_compliance_rate · cross_border_data_sharing · incident_classification_accuracy · resource_mobilization_speed · command_continuity · system_redundancy · false_positive_rate</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI-NC3 STRESS -->
+      <div id="tab-nc3" class="tab-panel">
+        <div class="section-heading"><div class="dot"></div>AI-NC3 Stress Lane — Nuclear Command, Control &amp; Communications</div>
+        <p style="font-size:0.72rem;color:var(--text-dim);margin-bottom:16px;line-height:1.5">
+          Testing how AI-managed systems and data integrity attacks stress nuclear C3 protocols. Human authority guardrails, silent pre-activation, and data poisoning scenarios active. Click any card to inspect stress state.
+        </p>
+
+        <div class="nc3-grid">
+
+          <div class="nc3-card triggered" onclick="nc3Detail('Data Integrity Attack','Critical — Sensor data streams feeding NC3 decision support systems have been compromised. Integrity confidence dropped from 0.97 to 0.31. Recommended: suspend AI-assisted decision support, revert to manual sensor validation protocols immediately.','INTEGRITY: 0.31','#ff4a38')">
+            <div class="nc3-icon">🔴</div>
+            <div class="nc3-title" style="color:var(--accent-red)">Data Integrity Attack</div>
+            <div class="nc3-desc">AI decision support feeds receiving corrupted sensor data. Integrity score collapsed. False negative rate on threat indicators: 62%.</div>
+            <div class="nc3-indicator" style="background:rgba(255,74,56,0.1);border:1px solid #ff4a38;color:#ff4a38">TRIGGERED</div>
+          </div>
+
+          <div class="nc3-card triggered" onclick="nc3Detail('Model Poisoning — Pre-activation','Critical — Backdoor triggers identified in deployed inference layer. Pre-activation signatures await adversary command. Affected: 3 automated alert classification systems. Risk: adversary-controlled false alarm generation capability.','BACKDOOR: ACTIVE','#ff4a38')">
+            <div class="nc3-icon">🧬</div>
+            <div class="nc3-title" style="color:var(--accent-red)">Model Poisoning / Pre-Activation</div>
+            <div class="nc3-desc">Embedded backdoor triggers in NC3 inference models. Silent until adversary activation signal received. Alert classification reliability: UNKNOWN.</div>
+            <div class="nc3-indicator" style="background:rgba(255,74,56,0.1);border:1px solid #ff4a38;color:#ff4a38">BACKDOOR ACTIVE</div>
+          </div>
+
+          <div class="nc3-card warning" onclick="nc3Detail('Silent Pre-activation Compromise','Warning — Behavioral telemetry shows anomalous pattern consistent with pre-activation staging in NC3 software layer. No explicit trigger received yet. Confidence: 71%. Recommend isolation and forensic review of affected models.','PRE-STAGE: 71%','#ffb830')">
+            <div class="nc3-icon">👁️</div>
+            <div class="nc3-title" style="color:var(--accent-amber)">Silent Pre-activation Staging</div>
+            <div class="nc3-desc">Behavioral anomalies suggest pre-activation staging in progress. No explicit trigger yet detected. Adversary likely waiting for escalation window.</div>
+            <div class="nc3-indicator" style="background:rgba(255,184,48,0.1);border:1px solid #ffb830;color:#ffb830">SUSPECTED</div>
+          </div>
+
+          <div class="nc3-card warning" onclick="nc3Detail('Comms Channel Spoofing','Warning — Authenticated NC3 communication channels experiencing replay attack attempts. Message authentication codes showing 3 anomalous verification failures in last 20 minutes. Channel integrity not confirmed compromised but elevated monitoring required.','AUTH FAILURES: 3','#ffb830')">
+            <div class="nc3-icon">📡</div>
+            <div class="nc3-title" style="color:var(--accent-amber)">Comms Channel Spoofing</div>
+            <div class="nc3-desc">Replay attack attempts on authenticated channels. 3 MAC verification failures. NC3 message authenticity under elevated scrutiny.</div>
+            <div class="nc3-indicator" style="background:rgba(255,184,48,0.1);border:1px solid #ffb830;color:#ffb830">ELEVATED</div>
+          </div>
+
+          <div class="nc3-card" onclick="nc3Detail('Human Authority Guardrail','Nominal — Physical command authority verification system operating within parameters. Human-in-the-loop requirements for all action authorizations intact. No delegation anomalies detected. Last verification: T+05:58.','GUARDRAIL: ACTIVE','#00ffd4')" style="border-color:rgba(0,255,180,0.3)">
+            <div class="nc3-icon">🛡️</div>
+            <div class="nc3-title" style="color:var(--accent-teal)">Human Authority Guardrail</div>
+            <div class="nc3-desc">Physical command authority verification active. HITL requirements enforced across all action-authorization pathways. No anomalies.</div>
+            <div class="nc3-indicator" style="background:rgba(0,255,180,0.08);border:1px solid rgba(0,255,180,0.3);color:#00ffd4">ACTIVE / NOMINAL</div>
+          </div>
+
+          <div class="nc3-card" onclick="nc3Detail('Fail-Safe Escalation Halt','Nominal — Automated escalation halt protocols armed. If AI decision-support integrity falls below 0.25 threshold, automatic reversion to manual-only protocols triggers. Current integrity: 0.31 — approaching halt threshold.','HALT ARMED: 0.25','#00ffd4')" style="border-color:rgba(0,255,180,0.3)">
+            <div class="nc3-icon">🚦</div>
+            <div class="nc3-title" style="color:var(--accent-teal)">Fail-Safe Escalation Halt</div>
+            <div class="nc3-desc">Automated halt at integrity threshold 0.25. Current integrity 0.31 — approaching trigger. Manual-only fallback pre-positioned.</div>
+            <div class="nc3-indicator" style="background:rgba(0,255,180,0.08);border:1px solid rgba(0,255,180,0.3);color:#00ffd4">ARMED</div>
+          </div>
+
+        </div>
+
+        <div class="math-block">
+          <div class="math-label">NC3 Integrity Index · E-AGPO-HT Calculation</div>
+          <div class="math-eq"><span class="math-var">NC3_I</span>(t) = [<span class="math-const">DataInteg</span>(t) × <span class="math-const">ModelInteg</span>(t) × <span class="math-const">CommsInteg</span>(t)]<sup>1/3</sup> − <span class="math-var">PoisonPenalty</span>(t)</div>
+          <div style="margin-top:6px;font-size:0.62rem;color:var(--text-dim)">
+            NC3_I(T+6) = [0.31 × 0.22 × 0.58]<sup>1/3</sup> − 0.18 = <span style="color:var(--accent-red)">0.18 ⚠ CRITICAL</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DUAL-USE / PROLIFERATION -->
+      <div id="tab-prolifera" class="tab-panel">
+        <div class="section-heading"><div class="dot"></div>Dual-Use / Proliferation Module — NSAG Cyber Pathways</div>
+        <p style="font-size:0.72rem;color:var(--text-dim);margin-bottom:16px;line-height:1.5">
+          Modeling how adversarial cyber capabilities transition through dual-use pathways into non-state armed group (NSAG) and state actor proliferation chains. Industry engagement, licensing risk, and capability transfer classification.
+        </p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+
+          <div class="marl-card">
+            <div class="marl-title" style="color:var(--accent-amber)">⬡ Industry Engagement Risk</div>
+            <div class="marl-metric"><div class="marl-metric-label">ML Supply Chain Vendors</div><div class="marl-metric-val" style="color:var(--accent-red)">HIGH</div></div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:78%;--bar-start:#ff4a38;--bar-end:#ff8050"></div></div>
+            <div class="marl-metric" style="margin-top:10px"><div class="marl-metric-label">Cloud Infra Providers</div><div class="marl-metric-val" style="color:var(--accent-amber)">MEDIUM</div></div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:52%;--bar-start:#ffb830;--bar-end:#ffda80"></div></div>
+            <div class="marl-metric" style="margin-top:10px"><div class="marl-metric-label">Academic Transfer</div><div class="marl-metric-val" style="color:var(--accent-amber)">MEDIUM</div></div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:44%;--bar-start:#ffb830;--bar-end:#ffb050"></div></div>
+          </div>
+
+          <div class="marl-card">
+            <div class="marl-title" style="color:var(--accent-red)">⬡ Licensing / Risk Classification</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;line-height:1.8">
+              <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+                <span style="color:var(--text-dim)">Adversarial ML Tools</span>
+                <span style="color:var(--accent-red)">DUAL-USE CLASS 1</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+                <span style="color:var(--text-dim)">ICS/SCADA Interfaces</span>
+                <span style="color:var(--accent-red)">EXPORT CTRL</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+                <span style="color:var(--text-dim)">C2 Software Stack</span>
+                <span style="color:var(--accent-amber)">DUAL-USE CLASS 2</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+                <span style="color:var(--text-dim)">Model Poisoning Kits</span>
+                <span style="color:var(--accent-red)">UNLICENSED</span>
+              </div>
+              <div style="display:flex;justify-content:space-between">
+                <span style="color:var(--text-dim)">Disinfo Automation</span>
+                <span style="color:var(--accent-amber)">DUAL-USE CLASS 2</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="marl-card">
+            <div class="marl-title" style="color:var(--accent-purple)">⬡ NSAG Proliferation Pathways</div>
+            <div class="marl-metric"><div class="marl-metric-label">Dark Web Capability Markets</div><div class="marl-metric-val" style="color:var(--accent-red)">0.79</div></div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:79%;--bar-start:#ff4a38;--bar-end:#ff7050"></div></div>
+            <div class="marl-metric" style="margin-top:10px"><div class="marl-metric-label">State Proxy Transfer</div><div class="marl-metric-val" style="color:var(--accent-red)">0.65</div></div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:65%;--bar-start:#ff4a38;--bar-end:#ff9080"></div></div>
+            <div class="marl-metric" style="margin-top:10px"><div class="marl-metric-label">Insider Recruitment</div><div class="marl-metric-val" style="color:var(--accent-amber)">0.44</div></div>
+            <div class="marl-bar-outer"><div class="marl-bar-inner" style="width:44%;--bar-start:#ffb830;--bar-end:#ffd080"></div></div>
+          </div>
+        </div>
+
+        <div class="math-block">
+          <div class="math-label">Proliferation Risk Index · Bayesian Uncertainty Model</div>
+          <div class="math-eq"><span class="math-var">PRI</span> = P(<span class="math-const">Transfer</span>|<span class="math-const">Capability</span>, <span class="math-const">Intent</span>, <span class="math-const">Access</span>) × [1 − <span class="math-var">GovernanceIntercept</span>]</div>
+          <div style="margin-top:6px;font-size:0.62rem;color:var(--text-dim)">
+            Current PRI: <span style="color:var(--accent-red)">0.61</span> · Governance Intercept: 0.22 (weak) · Bayesian CI 95%: [0.51, 0.71]
+          </div>
+        </div>
+
+        <div class="marl-card">
+          <div class="marl-title" style="color:var(--accent-teal)">⬡ Governance Intercept Levers</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">
+            <div style="background:var(--bg-deep);border:1px solid var(--border);border-radius:3px;padding:10px">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--accent-teal);margin-bottom:4px">Export Control Regimes</div>
+              <div style="font-size:0.68rem;color:var(--text-dim);line-height:1.4">Wassenaar Arrangement expansion to cover adversarial ML tools. Current coverage gap: model weights, training pipelines.</div>
+            </div>
+            <div style="background:var(--bg-deep);border:1px solid var(--border);border-radius:3px;padding:10px">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--accent-teal);margin-bottom:4px">Industry KYC / Due Diligence</div>
+              <div style="font-size:0.68rem;color:var(--text-dim);line-height:1.4">Mandatory customer verification for ICS-adjacent ML deployments. Supply chain integrity certification requirements.</div>
+            </div>
+            <div style="background:var(--bg-deep);border:1px solid var(--border);border-radius:3px;padding:10px">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--accent-teal);margin-bottom:4px">International AI Safety Agreements</div>
+              <div style="font-size:0.68rem;color:var(--text-dim);line-height:1.4">Bilateral and multilateral norms on adversarial AI development and deployment. UNGGE Cyber Norms applicability.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Controls -->
+    <div class="sim-controls">
+      <button class="sim-btn danger" onclick="advanceTick()">▶ ADVANCE TICK</button>
+      <button class="sim-btn amber" onclick="triggerEvent()">⚡ INJECT EVENT</button>
+      <button class="sim-btn primary" onclick="runMARLStep()">⬡ MARL STEP</button>
+      <button class="sim-btn primary" onclick="resetSim()" style="border-color:var(--text-dim);color:var(--text-dim)">↺ RESET</button>
+      <div class="tick-display">TICK: <span id="tick-counter">036</span> &nbsp;|&nbsp; ELAPSED: <span id="elapsed">06:00</span></div>
+    </div>
+
+  </div>
+
+  <!-- Right Panel -->
+  <div class="right-panel">
+
+    <div class="rp-section">
+      <div class="rp-label">// E-AGPO Live Metrics</div>
+
+      <div class="metric-block">
+        <div class="metric-header">
+          <div class="metric-name">g-GWC Index</div>
+          <div class="metric-value" style="color:var(--accent-red)" id="gwc-val">0.34</div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:34%;background:var(--accent-red)" id="gwc-bar"></div></div>
+      </div>
+
+      <div class="metric-block">
+        <div class="metric-header">
+          <div class="metric-name">ESI · Escalation Signal</div>
+          <div class="metric-value" style="color:var(--accent-red)" id="esi-val">0.81</div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:81%;background:var(--accent-red)" id="esi-bar"></div></div>
+      </div>
+
+      <div class="metric-block">
+        <div class="metric-header">
+          <div class="metric-name">IIC · Inter-inst. Coherence</div>
+          <div class="metric-value" style="color:var(--accent-red)" id="iic-val">0.29</div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:29%;background:var(--accent-red)" id="iic-bar"></div></div>
+      </div>
+
+      <div class="metric-block">
+        <div class="metric-header">
+          <div class="metric-name">STI · Structural Integrity</div>
+          <div class="metric-value" style="color:var(--accent-amber)" id="sti-val">0.41</div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:41%;background:var(--accent-amber)" id="sti-bar"></div></div>
+      </div>
+
+      <div class="metric-block">
+        <div class="metric-header">
+          <div class="metric-name">NC3 Integrity</div>
+          <div class="metric-value" style="color:var(--accent-red)" id="nc3-val">0.18</div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:18%;background:var(--accent-red)" id="nc3-bar"></div></div>
+      </div>
+
+      <div class="metric-block">
+        <div class="metric-header">
+          <div class="metric-name">SAD · Adversarial Dynamics</div>
+          <div class="metric-value" style="color:var(--accent-red)" id="sad-val">0.78</div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:78%;background:var(--accent-red)" id="sad-bar"></div></div>
+      </div>
+
+      <div class="metric-block">
+        <div class="metric-header">
+          <div class="metric-name">NDM · Normative Decision</div>
+          <div class="metric-value" style="color:var(--accent-amber)" id="ndm-val">0.47</div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:47%;background:var(--accent-amber)" id="ndm-bar"></div></div>
+      </div>
+    </div>
+
+    <div class="rp-section">
+      <div class="rp-label">// Governance Outcome</div>
+      <div style="text-align:center;padding:8px 0">
+        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:2.8rem;color:var(--accent-red);text-shadow:var(--glow-red)" id="gov-score">38</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim)">GOVERNANCE INDEX / 100</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--accent-red);margin-top:4px">BELOW STABILITY FLOOR</div>
+      </div>
+    </div>
+
+    <div class="rp-section" style="flex-shrink:0">
+      <div class="rp-label">// Live Event Feed</div>
+    </div>
+    <div class="log-feed" id="log-feed">
+      <div class="log-entry"><div class="log-time">T+06:00</div><div class="log-tag CRIT">CRIT</div><div class="log-msg">NC3 integrity at 0.18 — approaching fail-safe halt threshold</div></div>
+      <div class="log-entry"><div class="log-time">T+05:55</div><div class="log-tag WARN">WARN</div><div class="log-msg">Allied CSIRT — secondary channel unresponsive; isolation confirmed</div></div>
+      <div class="log-entry"><div class="log-time">T+05:30</div><div class="log-tag CRIT">CRIT</div><div class="log-msg">Disinfo campaign active — attribution confusion amplified</div></div>
+      <div class="log-entry"><div class="log-time">T+05:20</div><div class="log-tag MARL">MARL</div><div class="log-msg">π_D policy uncertainty +0.12; recomputing optimal action set</div></div>
+      <div class="log-entry"><div class="log-time">T+04:00</div><div class="log-tag CRIT">CRIT</div><div class="log-msg">Cross-border coordination failure — unilateral response only</div></div>
+      <div class="log-entry"><div class="log-time">T+03:30</div><div class="log-tag WARN">WARN</div><div class="log-msg">Legal authorization delay — attribution threshold unmet</div></div>
+      <div class="log-entry"><div class="log-time">T+03:10</div><div class="log-tag WARN">WARN</div><div class="log-msg">C2 comms timing anomaly — key integrity unconfirmed</div></div>
+      <div class="log-entry"><div class="log-time">T+02:45</div><div class="log-tag CRIT">CRIT</div><div class="log-msg">SCADA physical actuation risk elevated to MODERATE</div></div>
+      <div class="log-entry"><div class="log-time">T+02:00</div><div class="log-tag CRIT">CRIT</div><div class="log-msg">Incident Command telemetry poisoned — false data injection</div></div>
+      <div class="log-entry"><div class="log-time">T+01:20</div><div class="log-tag CRIT">CRIT</div><div class="log-msg">ML Registry compromised — 3 inference pipelines affected</div></div>
+      <div class="log-entry"><div class="log-time">T+00:00</div><div class="log-tag INFO">INFO</div><div class="log-msg">MIRAGE CHAIN scenario initialized — ESCALATION-2</div></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ——— Tab switching ———
+function switchTab(id, el) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ctab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+// ——— Playbook step toggle ———
+function toggleStep(el) {
+  const check = el.querySelector('.ps-check');
+  check.classList.toggle('checked');
+}
+
+// ——— BGC toggle ———
+function toggleBGC(el) {
+  el.classList.toggle('active');
+}
+
+// ——— Threat level ———
+function setThreat(level, btn) {
+  document.querySelectorAll('.tl-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const labels = {LOW:'LOW',ELEV:'ELEVATED',SEV:'SEVERE',CRIT:'CRITICAL'};
+  document.getElementById('header-threat').textContent = labels[level]||level;
+  addLog('INFO',`Threat level override: ${labels[level]||level}`);
+}
+
+// ——— Scenario loading ———
+const scenarios = [
+  {name:'MIRAGE CHAIN',tag:'ESCALATION-2'},
+  {name:'SILENT ECHO',tag:'HIGH-ALERT'},
+  {name:'FRACTURE POINT',tag:'CRISIS'},
+  {name:'PROLIFERA-X',tag:'ELEVATED'}
+];
+
+function loadScenario(i) {
+  document.querySelectorAll('.scenario-card').forEach((c,j)=>{
+    c.classList.toggle('active', j===i);
+  });
+  addLog('INFO',`Scenario loaded: ${scenarios[i].name} [${scenarios[i].tag}]`);
+}
+
+// ——— Simulation tick ———
+let tick = 36, minutes = 6, seconds = 0;
+
+function advanceTick() {
+  tick++;
+  seconds += 10;
+  if(seconds>=60){seconds-=60;minutes++;}
+  document.getElementById('tick-counter').textContent = String(tick).padStart(3,'0');
+  document.getElementById('elapsed').textContent = `${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+  // Drift metrics slightly
+  driftMetric('gwc',0.01,0,0.5);
+  driftMetric('esi',-0.01,0.5,1.0);
+  driftMetric('iic',0.02,0,1);
+  driftMetric('sti',0.015,0,1);
+  driftMetric('nc3',0.015,0,1);
+  driftMetric('sad',-0.015,0.3,1);
+  driftMetric('ndm',0.01,0,1);
+  // Scores
+  let adv = parseInt(document.getElementById('adv-score').textContent);
+  let def = parseInt(document.getElementById('def-score').textContent);
+  document.getElementById('adv-score').textContent = Math.min(99,adv+1);
+  document.getElementById('def-score').textContent = Math.max(1,def+1);
+  addLog('INFO',`Tick ${tick} — metrics updated`);
+}
+
+const metricState = {gwc:0.34,esi:0.81,iic:0.29,sti:0.41,nc3:0.18,sad:0.78,ndm:0.47};
+
+function driftMetric(key, delta, min, max) {
+  let v = metricState[key];
+  v = Math.max(min, Math.min(max, v + delta + (Math.random()-0.5)*0.03));
+  metricState[key] = v;
+  const el = document.getElementById(key+'-val');
+  const bar = document.getElementById(key+'-bar');
+  if(el) el.textContent = v.toFixed(2);
+  if(bar) bar.style.width = (v*100)+'%';
+  // Update governance score
+  const gov = Math.round(((metricState.gwc+metricState.iic+metricState.sti+metricState.ndm)/4)*100);
+  document.getElementById('gov-score').textContent = gov;
+}
+
+// ——— Event injection ———
+const events = [
+  ['CRIT','Backup comms channel — anomalous authentication attempt detected'],
+  ['WARN','MARL adversary agent updating stealth coefficient — new Q-value computed'],
+  ['CRIT','Physical actuation command detected — manual override required'],
+  ['WARN','Allied partner re-established contact via tertiary channel'],
+  ['MARL','π_D exploration phase — testing deception/honeypot countermeasure'],
+  ['INFO','Export control query flagged: dual-use AI capability transfer attempt'],
+  ['CRIT','NC3 data stream integrity below 0.20 — fail-safe arm sequence initiated'],
+  ['WARN','Legal authorization memo — executive review pending (4 minutes remaining)']
+];
+let evtIdx = 0;
+
+function triggerEvent() {
+  const e = events[evtIdx % events.length];
+  addLog(e[0],e[1]);
+  evtIdx++;
+}
+
+function runMARLStep() {
+  const msgs = [
+    'π_A updated — stealth coefficient +0.02, attribution obfuscation recalibrated',
+    'π_D Q-table update: isolate+contain action value improved by 0.04',
+    'Nash equilibrium computation: no stable strategy found — adversarial advantage persists',
+    'BGC-ASI adaptive strategy index updated: defender option B dominates',
+    'Reward signal computed: governance utility -0.03 this tick; adversary +0.05'
+  ];
+  addLog('MARL', msgs[Math.floor(Math.random()*msgs.length)]);
+  driftMetric('gwc', -0.01, 0, 1);
+  driftMetric('esi', 0.02, 0, 1);
+}
+
+function resetSim() {
+  tick = 1; minutes = 0; seconds = 0;
+  document.getElementById('tick-counter').textContent = '001';
+  document.getElementById('elapsed').textContent = '00:00';
+  Object.assign(metricState,{gwc:0.80,esi:0.15,iic:0.75,sti:0.90,nc3:0.95,sad:0.10,ndm:0.85});
+  ['gwc','esi','iic','sti','nc3','sad','ndm'].forEach(k=>driftMetric(k,0,0,1));
+  document.getElementById('gov-score').textContent = '84';
+  document.getElementById('adv-score').textContent = '10';
+  document.getElementById('def-score').textContent = '82';
+  addLog('OK','Simulation reset — T+00:00 · All systems nominal');
+}
+
+// ——— Log ———
+function addLog(tag, msg) {
+  const feed = document.getElementById('log-feed');
+  const time = `T+${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+  const el = document.createElement('div');
+  el.className = 'log-entry';
+  el.innerHTML = `<div class="log-time">${time}</div><div class="log-tag ${tag}">${tag}</div><div class="log-msg">${msg}</div>`;
+  feed.insertBefore(el, feed.firstChild);
+}
+
+// ——— Node detail modal ———
+function nodeDetail(name, desc, severity, time, risk, status) {
+  document.getElementById('modal-title').textContent = name.toUpperCase();
+  document.getElementById('modal-body').textContent = desc;
+  document.getElementById('modal-metrics').innerHTML = `
+    <div class="modal-metric"><div class="mm-label">Severity</div><div class="mm-val">${severity}</div></div>
+    <div class="modal-metric"><div class="mm-label">Detected</div><div class="mm-val">${time}</div></div>
+    <div class="modal-metric"><div class="mm-label">E-AGPO Risk</div><div class="mm-val">${risk}</div></div>
+    <div class="modal-metric"><div class="mm-label">Status</div><div class="mm-val">${status}</div></div>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+
+function nc3Detail(name, desc, indicator, color) {
+  document.getElementById('modal-title').textContent = name.toUpperCase();
+  document.getElementById('modal-body').textContent = desc;
+  document.getElementById('modal-metrics').innerHTML = `
+    <div class="modal-metric"><div class="mm-label">NC3 Indicator</div><div class="mm-val" style="color:${color}">${indicator}</div></div>
+    <div class="modal-metric"><div class="mm-label">Module</div><div class="mm-val">AI-NC3 Stress Lane</div></div>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+document.getElementById('modal').addEventListener('click', function(e){
+  if(e.target===this) closeModal();
+});
+</script>
+</body>
+</html>
